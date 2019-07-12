@@ -16,7 +16,7 @@ app.use(ratelimiter.middleware.bind(ratelimiter));
 
 app.set("trust proxy", 1);
 
-app.get("/", (req, res) => res.status(200).json({ message: "Welcome to a file server" }));
+app.get("/:file", Uploads.getFile);
 
 app.post("/upload", Uploads.upload);
 

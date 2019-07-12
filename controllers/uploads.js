@@ -1,6 +1,7 @@
 const multer = require("multer");
-const crypto = require("crypto");
 const path = require("path");
+const fs = require("fs").promises;
+const config = require("../config.json");
 const blacklisted = [".exe", ".bat", ".cmd", ".msi", ".sh"];
 
 const uploadDir = path.join(__dirname, "..", "data", "uploads");
@@ -9,9 +10,7 @@ const storage = multer.diskStorage({
     destination: uploadDir,
     filename: (req, file, cb) => {
         const [month, day, year] = new Date().toLocaleDateString("en-US", { timeZone: "Australia/Melbourne" }).split("/");
-        const date = `${day}-${month}-${year}`;
-        const hex = crypto.randomBytes(Math.floor(Math.random() * (((15 - 3) + 1) + 3))).toString("hex");
-        cb(null, `${date}-${hex}${path.extname(file.originalname)}`);
+        cb(null, `${day}-${month}-${year}-${Date.now().toString(16)}${path.extname(file.originalname)}`);
     }
 });
 
@@ -45,13 +44,19 @@ class Uploads {
 
             for (const file of req.files) {
                 files.push({
-                    ...file,
-                    ip: req.id,
+                    mimetype: file.mimetype,
+                    url: `${config.domain}/${file.filename}`,
                     timestamp: Date.now()
                 });
             }
 
             return res.json({ message: `Sucessfully uploaded ${files.length} files`, files });
+        });
+    }
+
+    static async getFile(req, res) {
+        return res.sendFile(req.params.file, {
+            root: uploadDir
         });
     }
 
